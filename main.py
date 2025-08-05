@@ -1,3 +1,5 @@
+import subprocess
+
 import modal
 
 # Configuration
@@ -52,9 +54,7 @@ app = modal.App("vllm-server")
 )
 @modal.concurrent(max_inputs=32)
 @modal.web_server(port=8000, startup_timeout=10 * 60)
-def serve():
-    import subprocess
-
+def serve() -> None:
     cmd = [
         "vllm",
         "serve",

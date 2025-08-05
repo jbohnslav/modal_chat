@@ -229,3 +229,5 @@ secrets.json
 # GPU specific temporary files
 *.nv-*
 cuda_*
+
+response.json
