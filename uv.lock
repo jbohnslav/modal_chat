@@ -1772,7 +1772,9 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "modal" },
+    { name = "openai" },
     { name = "parllama" },
+    { name = "rich" },
 ]
 
 [package.dev-dependencies]
@@ -1783,7 +1785,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "modal", specifier = ">=1.1.1" },
+    { name = "openai", specifier = ">=1.99.1" },
     { name = "parllama", specifier = ">=0.3.28" },
+    { name = "rich", specifier = ">=14.1.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -1991,7 +1995,7 @@ wheels = [
 
 [[package]]
 name = "openai"
-version = "1.99.0"
+version = "1.99.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -2003,9 +2007,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c5/72/3f49a3d0452019febd70fcf258743e01dc1ca43a95cc97a4b5b773d2d0a5/openai-1.99.0.tar.gz", hash = "sha256:7b985693da4dc9783394b785212bb67a65352cb6b867b1756b0e5e8321b4aba9", size = 497020, upload-time = "2025-08-05T17:02:02.834Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/03/30/f0fb7907a77e733bb801c7bdcde903500b31215141cdb261f04421e6fbec/openai-1.99.1.tar.gz", hash = "sha256:2c9d8e498c298f51bb94bcac724257a3a6cac6139ccdfc1186c6708f7a93120f", size = 497075, upload-time = "2025-08-05T19:42:36.131Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/18/f3fc5b111d0bc51111beb2b049571974df952a5f7f466126823124b77368/openai-1.99.0-py3-none-any.whl", hash = "sha256:9d762c299eba9b0b3a55c3905e8457520e73a7601a258b763aa046475fac2b98", size = 767800, upload-time = "2025-08-05T17:02:00.274Z" },
+    { url = "https://files.pythonhosted.org/packages/54/15/9c85154ffd283abfc43309ff3aaa63c3fd02f7767ee684e73670f6c5ade2/openai-1.99.1-py3-none-any.whl", hash = "sha256:8eeccc69e0ece1357b51ca0d9fb21324afee09b20c3e5b547d02445ca18a4e03", size = 767827, upload-time = "2025-08-05T19:42:34.192Z" },
 ]
 
 [[package]]
