@@ -5,6 +5,7 @@ MODEL_NAME = "openai/gpt-oss-120b"  # Change to any vLLM-compatible model
 MODEL_REVISION = None  # Optional: specific revision
 GPU_TYPE = "H100"  # Options: A100, H100, B200, etc.
 N_GPU = 1
+MAX_MODEL_LEN = 65536
 cuda_version = "12.8.1"  # should be no greater than host CUDA version
 flavor = "devel"  # includes full CUDA toolkit
 operating_sys = "ubuntu24.04"
@@ -25,6 +26,7 @@ vllm_image = (
         {
             "HF_HUB_ENABLE_HF_TRANSFER": "1",
             "VLLM_USE_V1": "1",
+            "TORCH_CUDA_ARCH_LIST": "9.0;10.0",  # H100/H200 (9.0) and B200 (10.0)
         }
     )
 )
@@ -63,6 +65,8 @@ def serve():
         "8000",
         "--tensor-parallel-size",
         str(N_GPU),
+        "--max-model-len",
+        str(MAX_MODEL_LEN),
     ]
 
     if MODEL_REVISION:
