@@ -8,3 +8,8 @@ dependencies = [
     "modal>=1.1.1",
     "parllama>=0.3.28",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.12.7",
+]
