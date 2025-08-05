@@ -1,0 +1,10 @@
+[project]
+name = "modal-chat"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "modal>=1.1.1",
+    "parllama>=0.3.28",
+]
