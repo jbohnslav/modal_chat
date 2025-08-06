@@ -12,6 +12,7 @@ cuda_version = "12.8.1"  # should be no greater than host CUDA version
 flavor = "devel"  # includes full CUDA toolkit
 operating_sys = "ubuntu24.04"
 tag = f"{cuda_version}-{flavor}-{operating_sys}"
+MINUTES = 60
 
 # Set up environment
 vllm_image = (
@@ -45,14 +46,16 @@ app = modal.App("vllm-server")
 @app.function(
     image=vllm_image,
     gpu=f"{GPU_TYPE}:{N_GPU}",
-    scaledown_window=15 * 60,  # 15 minutes
-    timeout=10 * 60,  # 10 minutes
+    scaledown_window=15 * 60,
+    timeout=10 * 60,
     volumes={
         "/root/.cache/huggingface": hf_cache_vol,
         "/root/.cache/vllm": vllm_cache_vol,
     },
+    enable_memory_snapshot=True,
+    experimental_options={"enable_gpu_snapshot": True},
 )
-@modal.concurrent(max_inputs=32)
+@modal.concurrent(max_inputs=2)
 @modal.web_server(port=8000, startup_timeout=10 * 60)
 def serve() -> None:
     cmd = [
