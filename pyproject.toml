@@ -1,14 +1,12 @@
 [project]
 name = "modal-chat"
 version = "0.1.0"
-description = "Add your description here"
+description = "Run vLLM servers on Modal and talk to them with Textual"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "modal>=1.1.1",
     "openai>=1.99.1",
-    "parllama>=0.3.28",
-    "rich>=14.1.0",
     "textual>=5.2.0",
 ]
 
