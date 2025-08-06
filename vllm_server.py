@@ -41,7 +41,6 @@ vllm_cache_vol = modal.Volume.from_name("vllm-cache", create_if_missing=True)
 # Create app
 app = modal.App("vllm-server")
 
-
 # Serve function
 @app.function(
     image=vllm_image,
@@ -52,7 +51,7 @@ app = modal.App("vllm-server")
         "/root/.cache/huggingface": hf_cache_vol,
         "/root/.cache/vllm": vllm_cache_vol,
     },
-    enable_memory_snapshot=True,
+    enable_memory_snapshot=True, # I don't think this works properly yet
     experimental_options={"enable_gpu_snapshot": True},
 )
 @modal.concurrent(max_inputs=2)
