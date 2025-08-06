@@ -1,4 +1,4 @@
-# Modal Chat – vLLM server + terminal UI
+# Modal Chat – vLLM server + textual UI
 
 Run any vLLM-compatible model on [Modal](https://modal.com) and chat with it from
 your terminal.
