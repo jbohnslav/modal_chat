@@ -58,7 +58,10 @@ class GPTOSSClient(App):
     AUTO_FOCUS = "Input"
     BINDINGS = [
         ("ctrl+c", "quit", "Quit"),
-        ("ctrl+r", "reset", "Reset conversation"),
+        ("ctrl+r", "reset", "Reset"),
+        ("ctrl+1", "set_reasoning_low", "Low"),
+        ("ctrl+2", "set_reasoning_medium", "Med"),
+        ("ctrl+3", "set_reasoning_high", "High"),
     ]
 
     CSS = """
@@ -92,13 +95,14 @@ class GPTOSSClient(App):
     }
 
     #chat-container {
-        height: 100%;
+        height: 1fr;
         overflow-y: auto;
     }
 
     #input-container {
         height: 3;
         dock: bottom;
+        margin-bottom: 3;
     }
     """
 
@@ -112,6 +116,7 @@ class GPTOSSClient(App):
         self.conversation = ConversationManager()
         self.current_reasoning: Reasoning | None = None
         self.current_output: Output | None = None
+        self.reasoning_effort = "medium"
 
     def compose(self) -> ComposeResult:
         yield Header(show_clock=True)
@@ -128,6 +133,27 @@ class GPTOSSClient(App):
         chat_container.remove_children()
         await chat_container.mount(Output("Conversation reset! Ready for a new chat."))
         self.notify("Conversation reset", severity="information")
+
+    async def action_set_reasoning_low(self) -> None:
+        """Set reasoning effort to low."""
+        self.reasoning_effort = "low"
+        self.notify(
+            f"Reasoning effort: {self.reasoning_effort}", severity="information"
+        )
+
+    async def action_set_reasoning_medium(self) -> None:
+        """Set reasoning effort to medium."""
+        self.reasoning_effort = "medium"
+        self.notify(
+            f"Reasoning effort: {self.reasoning_effort}", severity="information"
+        )
+
+    async def action_set_reasoning_high(self) -> None:
+        """Set reasoning effort to high."""
+        self.reasoning_effort = "high"
+        self.notify(
+            f"Reasoning effort: {self.reasoning_effort}", severity="information"
+        )
 
     @on(Input.Submitted)
     async def on_input(self, event: Input.Submitted) -> None:
@@ -190,6 +216,7 @@ class GPTOSSClient(App):
                 model="openai/gpt-oss-120b",
                 instructions=self.conversation.system_prompt,
                 input=full_input,
+                reasoning={"effort": self.reasoning_effort},
                 stream=True,
                 temperature=0.7,
                 max_output_tokens=4096,
