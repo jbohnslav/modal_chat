@@ -9,6 +9,7 @@ dependencies = [
     "openai>=1.99.1",
     "parllama>=0.3.28",
     "rich>=14.1.0",
+    "textual>=5.2.0",
 ]
 
 [dependency-groups]
@@ -87,6 +88,7 @@ ignore = [
     "S602",     # `subprocess` call with `shell=True` identified, security issue
     "T201",     # `print` found
     "T203",     # `pprint` found
+    "RUF012",
 ]
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
