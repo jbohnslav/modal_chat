@@ -1,4 +1,7 @@
+import json
 import subprocess
+import time
+import urllib.request
 
 import modal
 
@@ -42,8 +45,39 @@ vllm_cache_vol = modal.Volume.from_name("vllm-cache", create_if_missing=True)
 app = modal.App("vllm-server")
 
 
-# Serve function
-@app.function(
+def _wait_for_http(url: str, timeout_seconds: int = 10 * 60, poll_interval: float = 1.0) -> None:
+    """Wait for an HTTP endpoint to become available (2xx/3xx/4xx considered up)."""
+    deadline = time.time() + timeout_seconds
+    last_error: Exception | None = None
+    while time.time() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as resp:  # nosec - local call
+                # If the server responds at all, we consider it up
+                if 200 <= resp.status < 600:
+                    return
+        except Exception as e:  # noqa: BLE001
+            last_error = e
+            time.sleep(poll_interval)
+    raise TimeoutError(f"Timed out waiting for {url!r}. Last error: {last_error}")
+
+
+def _post_json(url: str, payload: dict, timeout_seconds: int = 30) -> None:
+    data = json.dumps(payload).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": "Bearer EMPTY",
+        },
+    )
+    with urllib.request.urlopen(req, timeout=timeout_seconds) as resp:  # nosec - local call
+        # Read response to completion to ensure any lazy alloc/compile happens
+        _ = resp.read()
+
+
+@app.cls(
     image=vllm_image,
     gpu=f"{GPU_TYPE}:{N_GPU}",
     scaledown_window=15 * 60,
@@ -52,27 +86,58 @@ app = modal.App("vllm-server")
         "/root/.cache/huggingface": hf_cache_vol,
         "/root/.cache/vllm": vllm_cache_vol,
     },
-    enable_memory_snapshot=True,  # I don't think this works properly yet
+    enable_memory_snapshot=True,
     experimental_options={"enable_gpu_snapshot": True},
 )
-@modal.concurrent(max_inputs=2)
-@modal.web_server(port=8000, startup_timeout=10 * 60)
-def serve() -> None:
-    cmd = [
-        "vllm",
-        "serve",
-        MODEL_NAME,
-        "--host",
-        "0.0.0.0",
-        "--port",
-        "8000",
-        "--tensor-parallel-size",
-        str(N_GPU),
-        "--max-model-len",
-        str(MAX_MODEL_LEN),
-    ]
+class VLLMServer:
+    """Modal class that launches vLLM and snapshots CPU+GPU memory after warmup."""
 
-    if MODEL_REVISION:
-        cmd.extend(["--revision", MODEL_REVISION])
+    def __init__(self) -> None:
+        self._proc: subprocess.Popen[str] | None = None
 
-    subprocess.Popen(" ".join(cmd), shell=True)
+    @modal.enter()
+    def _enter(self) -> None:
+        # Launch vLLM HTTP server
+        cmd: list[str] = [
+            "vllm",
+            "serve",
+            MODEL_NAME,
+            "--host",
+            "0.0.0.0",
+            "--port",
+            "8000",
+            "--tensor-parallel-size",
+            str(N_GPU),
+            "--max-model-len",
+            str(MAX_MODEL_LEN),
+        ]
+        if MODEL_REVISION:
+            cmd.extend(["--revision", str(MODEL_REVISION)])
+
+        # Use exec form to avoid shell, capture the process handle
+        self._proc = subprocess.Popen(cmd, text=True)
+
+        # Wait until the server responds locally
+        _wait_for_http("http://127.0.0.1:8000/v1/models", timeout_seconds=10 * 60)
+
+        # Run a minimal request to force any lazy GPU allocations / kernel compiles
+        try:
+            _post_json(
+                "http://127.0.0.1:8000/v1/chat/completions",
+                payload={
+                    "model": MODEL_NAME,
+                    "messages": [{"role": "user", "content": "hi"}],
+                    "max_tokens": 1,
+                    "temperature": 0,
+                },
+                timeout_seconds=60,
+            )
+        except Exception:
+            # Best-effort warmup; proceed to snapshot regardless
+            pass
+
+    @modal.web_server(port=8000, startup_timeout=10 * 60)
+    def serve(self) -> None:
+        # Keep the container alive by waiting on the vLLM process
+        assert self._proc is not None
+        self._proc.wait()
